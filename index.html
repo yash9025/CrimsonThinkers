@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Professional Hydrogen Infrastructure Analysis Platform</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.css" />
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content container">
+            <div class="header-brand">
+                <h1 class="header-title">Hydrogen Infrastructure Analysis</h1>
+                <p class="header-subtitle">Professional Location Intelligence Platform</p>
+            </div>
+            <div class="header-actions">
+                <button id="export-report" class="btn btn--outline btn--sm">
+                    Export Report
+                </button>
+                <button id="help-btn" class="btn btn--secondary btn--sm">
+                    Help
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Control Panel -->
+        <aside class="control-panel" id="control-panel">
+            <div class="panel-header">
+                <h2>Analysis Tools</h2>
+                <button id="toggle-panel" class="panel-toggle" aria-label="Toggle Panel">
+                    <span class="toggle-icon">‹</span>
+                </button>
+            </div>
+
+            <!-- Drawing Tools -->
+            <section class="panel-section">
+                <h3>Drawing Tools</h3>
+                <div class="tool-grid">
+                    <button id="draw-polygon" class="tool-btn" data-tool="polygon" title="Draw Polygon Area">
+                        <div class="tool-icon">⬟</div>
+                        <span class="tool-label">Polygon</span>
+                    </button>
+                    <button id="draw-rectangle" class="tool-btn" data-tool="rectangle" title="Draw Rectangle Area">
+                        <div class="tool-icon">▭</div>
+                        <span class="tool-label">Rectangle</span>
+                    </button>
+                    <button id="draw-circle" class="tool-btn" data-tool="circle" title="Draw Circle Area">
+                        <div class="tool-icon">○</div>
+                        <span class="tool-label">Circle</span>
+                    </button>
+                    <button id="clear-all" class="tool-btn tool-btn--danger" title="Clear All Areas">
+                        <div class="tool-icon">🗑</div>
+                        <span class="tool-label">Clear</span>
+                    </button>
+                </div>
+            </section>
+
+            <!-- Analysis Weights -->
+            <section class="panel-section">
+                <h3>Analysis Criteria</h3>
+                <div class="criteria-weights">
+                    <div class="weight-item">
+                        <div class="weight-header">
+                            <span class="weight-name">Land Cost</span>
+                            <span class="weight-value" id="weight-land-value">25%</span>
+                        </div>
+                        <input type="range" id="weight-land" class="weight-slider" min="5" max="50" value="25" step="5">
+                    </div>
+                    <div class="weight-item">
+                        <div class="weight-header">
+                            <span class="weight-name">Renewable Potential</span>
+                            <span class="weight-value" id="weight-renewable-value">30%</span>
+                        </div>
+                        <input type="range" id="weight-renewable" class="weight-slider" min="5" max="50" value="30" step="5">
+                    </div>
+                    <div class="weight-item">
+                        <div class="weight-header">
+                            <span class="weight-name">Infrastructure</span>
+                            <span class="weight-value" id="weight-infrastructure-value">20%</span>
+                        </div>
+                        <input type="range" id="weight-infrastructure" class="weight-slider" min="5" max="50" value="20" step="5">
+                    </div>
+                    <div class="weight-item">
+                        <div class="weight-header">
+                            <span class="weight-name">Water Availability</span>
+                            <span class="weight-value" id="weight-water-value">15%</span>
+                        </div>
+                        <input type="range" id="weight-water" class="weight-slider" min="5" max="50" value="15" step="5">
+                    </div>
+                    <div class="weight-item">
+                        <div class="weight-header">
+                            <span class="weight-name">Regulatory Environment</span>
+                            <span class="weight-value" id="weight-regulatory-value">10%</span>
+                        </div>
+                        <input type="range" id="weight-regulatory" class="weight-slider" min="5" max="50" value="10" step="5">
+                    </div>
+                </div>
+                <div class="weight-total">
+                    <span>Total Weight: <strong id="total-weight">100%</strong></span>
+                    <button id="reset-weights" class="btn btn--sm btn--outline">Reset</button>
+                </div>
+            </section>
+
+            <!-- Analysis Presets -->
+            <section class="panel-section">
+                <h3>Analysis Presets</h3>
+                <select id="analysis-preset" class="form-control">
+                    <option value="default">Default Analysis</option>
+                    <option value="cost-optimized">Cost Optimized</option>
+                    <option value="renewable-focused">Renewable Focused</option>
+                    <option value="infrastructure-focused">Infrastructure Focused</option>
+                </select>
+            </section>
+        </aside>
+
+        <!-- Map Container -->
+        <div class="map-wrapper">
+            <div id="map" class="map"></div>
+            
+            <!-- Map Controls -->
+            <div class="map-controls">
+                <button id="reset-view" class="map-control-btn" title="Reset Map View">
+                    <span>🏠</span>
+                </button>
+                <button id="satellite-toggle" class="map-control-btn" title="Toggle Satellite View">
+                    <span>🛰️</span>
+                </button>
+            </div>
+
+            <!-- Analysis Results Panel -->
+            <div id="results-panel" class="results-panel hidden">
+                <div class="results-header">
+                    <h3>Analysis Results</h3>
+                    <button id="close-results" class="close-btn">&times;</button>
+                </div>
+                <div class="results-content">
+                    <div class="overall-score">
+                        <div class="score-display">
+                            <div class="score-number" id="overall-score">--</div>
+                            <div class="score-label">Overall Score</div>
+                        </div>
+                        <div class="score-rating" id="score-rating">--</div>
+                    </div>
+                    
+                    <div class="criteria-scores">
+                        <h4>Detailed Breakdown</h4>
+                        <div id="criteria-chart" class="chart-container" style="position: relative; height: 250px;">
+                            <canvas></canvas>
+                        </div>
+                    </div>
+
+                    <div class="location-details">
+                        <h4>Location Information</h4>
+                        <div class="detail-grid">
+                            <div class="detail-item">
+                                <span class="detail-label">Area Size:</span>
+                                <span class="detail-value" id="area-size">-- km²</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Primary State:</span>
+                                <span class="detail-value" id="primary-state">--</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Estimated Investment:</span>
+                                <span class="detail-value" id="investment-estimate">-- Cr INR</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">ROI Timeline:</span>
+                                <span class="detail-value" id="roi-timeline">-- years</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Land Cost Range:</span>
+                                <span class="detail-value" id="land-cost-range">-- INR/hectare</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Renewable Score:</span>
+                                <span class="detail-value" id="renewable-score">--/100</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="recommendations">
+                        <h4>Key Recommendations</h4>
+                        <div id="recommendations-list" class="recommendations-list">
+                            <!-- Recommendations will be populated here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="loading-overlay hidden">
+        <div class="loading-content">
+            <div class="loading-spinner"></div>
+            <h3>Analyzing Location</h3>
+            <p>Processing multi-criteria analysis...</p>
+        </div>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <!-- Scripts -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
