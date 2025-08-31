@@ -2,6 +2,7 @@
 
 An interactive **Geospatial Information System (GIS)** for analyzing, visualizing, and optimizing **green hydrogen infrastructure**.  
 This platform combines geospatial data, renewable energy sources, demand centers, pipelines, and regulatory zones to help identify the best locations for hydrogen production, storage, and distribution.
+website:- file:///C:/Users/aksha/OneDrive/Desktop/hydrogen-intelligence-platform.zip/index.html
 
 ---
 
