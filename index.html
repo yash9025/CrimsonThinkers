@@ -3,215 +3,298 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Professional Hydrogen Infrastructure Analysis Platform</title>
+    <title>Hydrogen Intelligence Platform</title>
+    
+    <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.css" />
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Custom CSS -->
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <!-- Header -->
     <header class="header">
-        <div class="header-content container">
-            <div class="header-brand">
-                <h1 class="header-title">Hydrogen Infrastructure Analysis</h1>
-                <p class="header-subtitle">Professional Location Intelligence Platform</p>
+        <div class="header__brand">
+            <div class="brand-icon">
+                <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+                    <circle cx="16" cy="16" r="12" stroke="currentColor" stroke-width="2" fill="none"/>
+                    <path d="m12 16 4 4 8-8" stroke="currentColor" stroke-width="2" fill="none"/>
+                </svg>
             </div>
-            <div class="header-actions">
-                <button id="export-report" class="btn btn--outline btn--sm">
-                    Export Report
-                </button>
-                <button id="help-btn" class="btn btn--secondary btn--sm">
-                    Help
-                </button>
+            <div class="brand-text">
+                <h1 class="brand-title">Hydrogen Intelligence</h1>
+                <span class="brand-subtitle">v3.0.0</span>
+            </div>
+        </div>
+        
+        <nav class="header__nav">
+            <button class="nav-item active" data-view="dashboard">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="3" width="7" height="7"></rect>
+                    <rect x="14" y="3" width="7" height="7"></rect>
+                    <rect x="14" y="14" width="7" height="7"></rect>
+                    <rect x="3" y="14" width="7" height="7"></rect>
+                </svg>
+                Dashboard
+            </button>
+            <button class="nav-item" data-view="projects">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                    <polyline points="14,2 14,8 20,8"></polyline>
+                    <line x1="16" y1="13" x2="8" y2="13"></line>
+                    <line x1="16" y1="17" x2="8" y2="17"></line>
+                    <polyline points="10,9 9,9 8,9"></polyline>
+                </svg>
+                Projects
+            </button>
+            <button class="nav-item" data-view="analytics">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="22,12 18,12 15,21 9,3 6,12 2,12"></polyline>
+                </svg>
+                Analytics
+            </button>
+        </nav>
+        
+        <div class="header__actions">
+            <button class="action-btn" id="themeToggle" title="Toggle Theme">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="5"></circle>
+                    <line x1="12" y1="1" x2="12" y2="3"></line>
+                    <line x1="12" y1="21" x2="12" y2="23"></line>
+                    <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                    <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                    <line x1="1" y1="12" x2="3" y2="12"></line>
+                    <line x1="21" y1="12" x2="23" y2="12"></line>
+                    <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                    <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                </svg>
+            </button>
+            <div class="user-profile">
+                <div class="user-avatar">A</div>
+                <span class="user-name">Admin</span>
             </div>
         </div>
     </header>
 
-    <!-- Main Content -->
-    <main class="main-content">
-        <!-- Control Panel -->
-        <aside class="control-panel" id="control-panel">
-            <div class="panel-header">
-                <h2>Analysis Tools</h2>
-                <button id="toggle-panel" class="panel-toggle" aria-label="Toggle Panel">
-                    <span class="toggle-icon">‹</span>
+    <!-- Main Application -->
+    <main class="main-app">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar__header">
+                <h3>Control Panel</h3>
+                <button class="sidebar-toggle" id="sidebarToggle">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="m15 18-6-6 6-6"></path>
+                    </svg>
                 </button>
             </div>
-
-            <!-- Drawing Tools -->
-            <section class="panel-section">
-                <h3>Drawing Tools</h3>
-                <div class="tool-grid">
-                    <button id="draw-polygon" class="tool-btn" data-tool="polygon" title="Draw Polygon Area">
-                        <div class="tool-icon">⬟</div>
-                        <span class="tool-label">Polygon</span>
-                    </button>
-                    <button id="draw-rectangle" class="tool-btn" data-tool="rectangle" title="Draw Rectangle Area">
-                        <div class="tool-icon">▭</div>
-                        <span class="tool-label">Rectangle</span>
-                    </button>
-                    <button id="draw-circle" class="tool-btn" data-tool="circle" title="Draw Circle Area">
-                        <div class="tool-icon">○</div>
-                        <span class="tool-label">Circle</span>
-                    </button>
-                    <button id="clear-all" class="tool-btn tool-btn--danger" title="Clear All Areas">
-                        <div class="tool-icon">🗑</div>
-                        <span class="tool-label">Clear</span>
-                    </button>
-                </div>
-            </section>
-
-            <!-- Analysis Weights -->
-            <section class="panel-section">
-                <h3>Analysis Criteria</h3>
-                <div class="criteria-weights">
-                    <div class="weight-item">
-                        <div class="weight-header">
-                            <span class="weight-name">Land Cost</span>
-                            <span class="weight-value" id="weight-land-value">25%</span>
-                        </div>
-                        <input type="range" id="weight-land" class="weight-slider" min="5" max="50" value="25" step="5">
-                    </div>
-                    <div class="weight-item">
-                        <div class="weight-header">
-                            <span class="weight-name">Renewable Potential</span>
-                            <span class="weight-value" id="weight-renewable-value">30%</span>
-                        </div>
-                        <input type="range" id="weight-renewable" class="weight-slider" min="5" max="50" value="30" step="5">
-                    </div>
-                    <div class="weight-item">
-                        <div class="weight-header">
-                            <span class="weight-name">Infrastructure</span>
-                            <span class="weight-value" id="weight-infrastructure-value">20%</span>
-                        </div>
-                        <input type="range" id="weight-infrastructure" class="weight-slider" min="5" max="50" value="20" step="5">
-                    </div>
-                    <div class="weight-item">
-                        <div class="weight-header">
-                            <span class="weight-name">Water Availability</span>
-                            <span class="weight-value" id="weight-water-value">15%</span>
-                        </div>
-                        <input type="range" id="weight-water" class="weight-slider" min="5" max="50" value="15" step="5">
-                    </div>
-                    <div class="weight-item">
-                        <div class="weight-header">
-                            <span class="weight-name">Regulatory Environment</span>
-                            <span class="weight-value" id="weight-regulatory-value">10%</span>
-                        </div>
-                        <input type="range" id="weight-regulatory" class="weight-slider" min="5" max="50" value="10" step="5">
+            
+            <div class="sidebar__content">
+                <!-- AOI Drawing Tools -->
+                <div class="control-group">
+                    <h4 class="control-title">AOI Drawing Tools</h4>
+                    <div class="drawing-tools">
+                        <button class="tool-btn" id="drawPolygon" title="Draw Polygon">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5"></polygon>
+                            </svg>
+                            Polygon
+                        </button>
+                        <button class="tool-btn" id="drawRectangle" title="Draw Rectangle">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                            </svg>
+                            Rectangle
+                        </button>
+                        <button class="tool-btn" id="drawCircle" title="Draw Circle">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"></circle>
+                            </svg>
+                            Circle
+                        </button>
+                        <button class="tool-btn danger" id="clearAOI" title="Clear AOI">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="3,6 5,6 21,6"></polyline>
+                                <path d="m19,6v14a2,2 0 0,1-2,2H7a2,2 0 0,1-2-2V6m3,0V4a2,2 0 0,1,2-2h4a2,2 0 0,1,2,2v2"></path>
+                            </svg>
+                            Clear
+                        </button>
                     </div>
                 </div>
-                <div class="weight-total">
-                    <span>Total Weight: <strong id="total-weight">100%</strong></span>
-                    <button id="reset-weights" class="btn btn--sm btn--outline">Reset</button>
-                </div>
-            </section>
 
-            <!-- Analysis Presets -->
-            <section class="panel-section">
-                <h3>Analysis Presets</h3>
-                <select id="analysis-preset" class="form-control">
-                    <option value="default">Default Analysis</option>
-                    <option value="cost-optimized">Cost Optimized</option>
-                    <option value="renewable-focused">Renewable Focused</option>
-                    <option value="infrastructure-focused">Infrastructure Focused</option>
-                </select>
-            </section>
+                <!-- Layer Controls -->
+                <div class="control-group">
+                    <h4 class="control-title">Map Layers</h4>
+                    <div class="layer-controls">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="plantLayer" checked>
+                            <span class="checkmark"></span>
+                            H₂ Production Plants
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="storageLayer" checked>
+                            <span class="checkmark"></span>
+                            Storage Facilities
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="demandLayer" checked>
+                            <span class="checkmark"></span>
+                            Demand Centers
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="renewableLayer" checked>
+                            <span class="checkmark"></span>
+                            Renewable Sources
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Analysis Parameters -->
+                <div class="control-group">
+                    <h4 class="control-title">Analysis Parameters</h4>
+                    <div class="parameter-controls">
+                        <div class="parameter-item">
+                            <label class="parameter-label">Renewable Proximity</label>
+                            <input type="range" class="parameter-slider" id="renewableWeight" min="0" max="100" value="20">
+                            <span class="parameter-value">20%</span>
+                        </div>
+                        <div class="parameter-item">
+                            <label class="parameter-label">Demand Access</label>
+                            <input type="range" class="parameter-slider" id="demandWeight" min="0" max="100" value="18">
+                            <span class="parameter-value">18%</span>
+                        </div>
+                        <div class="parameter-item">
+                            <label class="parameter-label">Infrastructure</label>
+                            <input type="range" class="parameter-slider" id="infraWeight" min="0" max="100" value="16">
+                            <span class="parameter-value">16%</span>
+                        </div>
+                        <div class="parameter-item">
+                            <label class="parameter-label">Economic Factors</label>
+                            <input type="range" class="parameter-slider" id="economicWeight" min="0" max="100" value="12">
+                            <span class="parameter-value">12%</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Actions -->
+                <div class="control-group">
+                    <h4 class="control-title">Actions</h4>
+                    <div class="action-buttons">
+                        <button class="btn btn--primary" id="runAnalysis">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                            </svg>
+                            Run Analysis
+                        </button>
+                        <button class="btn btn--secondary" id="exportData">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                <polyline points="7,10 12,15 17,10"></polyline>
+                                <line x1="12" y1="15" x2="12" y2="3"></line>
+                            </svg>
+                            Export
+                        </button>
+                    </div>
+                </div>
+            </div>
         </aside>
 
         <!-- Map Container -->
-        <div class="map-wrapper">
+        <div class="map-container">
             <div id="map" class="map"></div>
             
-            <!-- Map Controls -->
-            <div class="map-controls">
-                <button id="reset-view" class="map-control-btn" title="Reset Map View">
-                    <span>🏠</span>
-                </button>
-                <button id="satellite-toggle" class="map-control-btn" title="Toggle Satellite View">
-                    <span>🛰️</span>
-                </button>
-            </div>
-
-            <!-- Analysis Results Panel -->
-            <div id="results-panel" class="results-panel hidden">
-                <div class="results-header">
-                    <h3>Analysis Results</h3>
-                    <button id="close-results" class="close-btn">&times;</button>
+            <!-- AOI Info Panel -->
+            <div class="aoi-info" id="aoiInfo" style="display: none;">
+                <div class="aoi-info__header">
+                    <h4>Area of Interest</h4>
+                    <button class="close-btn" id="closeAoiInfo">×</button>
                 </div>
-                <div class="results-content">
-                    <div class="overall-score">
-                        <div class="score-display">
-                            <div class="score-number" id="overall-score">--</div>
-                            <div class="score-label">Overall Score</div>
-                        </div>
-                        <div class="score-rating" id="score-rating">--</div>
+                <div class="aoi-info__content">
+                    <div class="aoi-metric">
+                        <span class="metric-label">Area:</span>
+                        <span class="metric-value" id="aoiArea">--</span>
                     </div>
-                    
-                    <div class="criteria-scores">
-                        <h4>Detailed Breakdown</h4>
-                        <div id="criteria-chart" class="chart-container" style="position: relative; height: 250px;">
-                            <canvas></canvas>
-                        </div>
+                    <div class="aoi-metric">
+                        <span class="metric-label">Perimeter:</span>
+                        <span class="metric-value" id="aoiPerimeter">--</span>
                     </div>
+                    <div class="aoi-metric">
+                        <span class="metric-label">Center:</span>
+                        <span class="metric-value" id="aoiCenter">--</span>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-                    <div class="location-details">
-                        <h4>Location Information</h4>
-                        <div class="detail-grid">
-                            <div class="detail-item">
-                                <span class="detail-label">Area Size:</span>
-                                <span class="detail-value" id="area-size">-- km²</span>
-                            </div>
-                            <div class="detail-item">
-                                <span class="detail-label">Primary State:</span>
-                                <span class="detail-value" id="primary-state">--</span>
-                            </div>
-                            <div class="detail-item">
-                                <span class="detail-label">Estimated Investment:</span>
-                                <span class="detail-value" id="investment-estimate">-- Cr INR</span>
-                            </div>
-                            <div class="detail-item">
-                                <span class="detail-label">ROI Timeline:</span>
-                                <span class="detail-value" id="roi-timeline">-- years</span>
-                            </div>
-                            <div class="detail-item">
-                                <span class="detail-label">Land Cost Range:</span>
-                                <span class="detail-value" id="land-cost-range">-- INR/hectare</span>
-                            </div>
-                            <div class="detail-item">
-                                <span class="detail-label">Renewable Score:</span>
-                                <span class="detail-value" id="renewable-score">--/100</span>
-                            </div>
-                        </div>
+        <!-- Analysis Panel -->
+        <div class="analysis-panel" id="analysisPanel">
+            <div class="analysis-panel__header">
+                <h3>AI Analysis Results</h3>
+                <div class="analysis-status">
+                    <div class="status-indicator" id="analysisStatus"></div>
+                    <span id="analysisStatusText">Ready</span>
+                </div>
+            </div>
+            
+            <div class="analysis-panel__content" id="analysisPanelContent">
+                <div class="analysis-placeholder">
+                    <div class="placeholder-icon">
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+                            <polyline points="22,12 18,12 15,21 9,3 6,12 2,12"></polyline>
+                        </svg>
                     </div>
-
-                    <div class="recommendations">
-                        <h4>Key Recommendations</h4>
-                        <div id="recommendations-list" class="recommendations-list">
-                            <!-- Recommendations will be populated here -->
-                        </div>
-                    </div>
+                    <h4>Draw an AOI to begin analysis</h4>
+                    <p>Use the drawing tools to select an area of interest for hydrogen infrastructure analysis.</p>
                 </div>
             </div>
         </div>
     </main>
 
+    <!-- Status Bar -->
+    <footer class="status-bar">
+        <div class="status-group">
+            <div class="status-item">
+                <span class="status-label">System:</span>
+                <span class="status-value connected">Connected</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">Analyses:</span>
+                <span class="status-value">15,420</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">Projects:</span>
+                <span class="status-value">67 Active</span>
+            </div>
+        </div>
+        <div class="status-group">
+            <div class="status-item">
+                <span class="status-label">Cost Savings:</span>
+                <span class="status-value">$2.8M</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">CO₂ Reduced:</span>
+                <span class="status-value">450k tons</span>
+            </div>
+        </div>
+    </footer>
+
     <!-- Loading Overlay -->
-    <div id="loading-overlay" class="loading-overlay hidden">
-        <div class="loading-content">
-            <div class="loading-spinner"></div>
-            <h3>Analyzing Location</h3>
-            <p>Processing multi-criteria analysis...</p>
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-spinner">
+            <div class="spinner"></div>
+            <p>Analyzing hydrogen infrastructure potential...</p>
         </div>
     </div>
 
-    <!-- Toast Notifications -->
-    <div id="toast-container" class="toast-container"></div>
-
-    <!-- Scripts -->
+    <!-- Leaflet JS -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Custom JS -->
     <script src="app.js"></script>
 </body>
 </html>

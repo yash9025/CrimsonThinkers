@@ -1,1103 +1,819 @@
-// Professional Hydrogen Infrastructure Analysis Platform
-class HydrogenAnalysisPlatform {
+// Hydrogen Infrastructure Intelligence Platform - Professional Implementation
+
+class HydrogenIntelligencePlatform {
     constructor() {
         this.map = null;
         this.drawControl = null;
         this.drawnItems = null;
-        this.satelliteLayer = null;
-        this.currentTileLayer = null;
-        this.isMapInitialized = false;
-        this.currentAnalysis = null;
-        this.analysisChart = null;
-        this.activeDrawTool = null;
-        
-        // Analysis weights
-        this.weights = {
-            landCost: 25,
-            renewablePotential: 30,
-            infrastructure: 20,
-            waterAvailability: 15,
-            regulatory: 10
+        this.currentAOI = null;
+        this.markers = {
+            plants: L.layerGroup(),
+            storage: L.layerGroup(),
+            demand: L.layerGroup(),
+            renewable: L.layerGroup()
         };
+        this.analysisCharts = {};
+        this.isAnalyzing = false;
         
-        // Analysis data from the provided JSON
-        this.analysisData = {
-            "suitability_criteria": {
-                "land_cost": {
-                    "rajasthan": {"min": 150000, "avg": 250000, "max": 350000, "unit": "INR/hectare"},
-                    "gujarat": {"min": 300000, "avg": 450000, "max": 600000, "unit": "INR/hectare"},
-                    "maharashtra": {"min": 500000, "avg": 750000, "max": 1000000, "unit": "INR/hectare"},
-                    "tamilnadu": {"min": 400000, "avg": 650000, "max": 900000, "unit": "INR/hectare"},
-                    "karnataka": {"min": 350000, "avg": 550000, "max": 750000, "unit": "INR/hectare"},
-                    "andhrapradesh": {"min": 280000, "avg": 420000, "max": 560000, "unit": "INR/hectare"}
-                },
-                "renewable_potential": {
-                    "solar_irradiance": {
-                        "rajasthan": {"value": 5.5, "rating": "Excellent", "capacity_factor": 0.22},
-                        "gujarat": {"value": 5.2, "rating": "Very Good", "capacity_factor": 0.20},
-                        "maharashtra": {"value": 4.8, "rating": "Good", "capacity_factor": 0.18},
-                        "tamilnadu": {"value": 4.9, "rating": "Good", "capacity_factor": 0.19},
-                        "karnataka": {"value": 5.1, "rating": "Very Good", "capacity_factor": 0.19},
-                        "andhrapradesh": {"value": 5.0, "rating": "Good", "capacity_factor": 0.19}
-                    },
-                    "wind_potential": {
-                        "tamilnadu": {"value": 7.5, "rating": "Excellent", "capacity_factor": 0.35},
-                        "gujarat": {"value": 7.2, "rating": "Excellent", "capacity_factor": 0.33},
-                        "rajasthan": {"value": 6.8, "rating": "Very Good", "capacity_factor": 0.30},
-                        "karnataka": {"value": 6.5, "rating": "Very Good", "capacity_factor": 0.28},
-                        "maharashtra": {"value": 6.2, "rating": "Good", "capacity_factor": 0.26},
-                        "andhrapradesh": {"value": 6.0, "rating": "Good", "capacity_factor": 0.25}
-                    }
-                }
+        // Application data
+        this.data = {
+            "platform_metadata": {
+                "name": "Hydrogen Intelligence Platform",
+                "version": "3.0.0",
+                "accuracy_target": 0.89,
+                "coverage": "Global",
+                "update_frequency": "Real-time"
             },
-            "benchmark_sites": [
-                {
-                    "name": "Gujarat Solar Park Reference",
-                    "location": "Gujarat",
-                    "score": 85,
-                    "land_cost": 450000,
-                    "renewable_score": 92,
-                    "infrastructure_score": 88,
-                    "water_score": 75,
-                    "regulatory_score": 82,
-                    "investment_estimate": 50000000,
-                    "capacity_mw": 100,
-                    "roi_years": 8.5
-                }
-            ]
+            "hydrogen_infrastructure": {
+                "plants": [
+                    {"id": 1, "name": "Green Valley H2 Hub", "lat": 37.7749, "lng": -122.4194, "capacity": "150 MW", "status": "operational", "type": "electrolysis"},
+                    {"id": 2, "name": "Desert Sun Facility", "lat": 34.0522, "lng": -118.2437, "capacity": "200 MW", "status": "construction", "type": "electrolysis"},
+                    {"id": 3, "name": "Nordic Wind H2", "lat": 59.9139, "lng": 10.7522, "capacity": "300 MW", "status": "operational", "type": "electrolysis"},
+                    {"id": 4, "name": "Texas Gulf Complex", "lat": 29.7604, "lng": -95.3698, "capacity": "500 MW", "status": "planning", "type": "electrolysis"},
+                    {"id": 5, "name": "Australian Solar H2", "lat": -33.8688, "lng": 151.2093, "capacity": "250 MW", "status": "operational", "type": "electrolysis"}
+                ],
+                "storage_facilities": [
+                    {"id": 1, "name": "Bay Area Storage", "lat": 37.8044, "lng": -122.2711, "capacity": "1000 tonnes", "status": "operational", "type": "compressed"},
+                    {"id": 2, "name": "Rotterdam Terminal", "lat": 51.9244, "lng": 4.4777, "capacity": "2500 tonnes", "status": "operational", "type": "liquefied"},
+                    {"id": 3, "name": "Tokyo Port Hub", "lat": 35.6762, "lng": 139.6503, "capacity": "1500 tonnes", "status": "construction", "type": "compressed"}
+                ],
+                "demand_centers": [
+                    {"id": 1, "name": "Silicon Valley Industrial", "lat": 37.3861, "lng": -122.0839, "demand": 45000, "type": "technology", "growth": 0.15},
+                    {"id": 2, "name": "Hamburg Steel Complex", "lat": 53.5511, "lng": 9.9937, "demand": 78000, "type": "steel", "growth": 0.12},
+                    {"id": 3, "name": "Tokyo Manufacturing", "lat": 35.6895, "lng": 139.6917, "demand": 62000, "type": "electronics", "growth": 0.18},
+                    {"id": 4, "name": "Houston Petrochemical", "lat": 29.7633, "lng": -95.3633, "demand": 95000, "type": "chemicals", "growth": 0.14}
+                ],
+                "renewable_sources": [
+                    {"id": 1, "name": "California Solar Farm", "lat": 35.2828, "lng": -120.6596, "capacity": 500, "type": "solar", "efficiency": 0.22},
+                    {"id": 2, "name": "North Sea Wind", "lat": 54.5, "lng": 3.0, "capacity": 800, "type": "offshore_wind", "efficiency": 0.45},
+                    {"id": 3, "name": "Australian Outback Solar", "lat": -26.0, "lng": 135.0, "capacity": 1200, "type": "solar", "efficiency": 0.24},
+                    {"id": 4, "name": "Texas Wind Corridor", "lat": 32.0, "lng": -101.0, "capacity": 900, "type": "onshore_wind", "efficiency": 0.38}
+                ]
+            },
+            "analysis_criteria": {
+                "renewable_proximity": {"weight": 0.20, "description": "Access to renewable energy sources"},
+                "demand_access": {"weight": 0.18, "description": "Proximity to hydrogen demand centers"},
+                "infrastructure": {"weight": 0.16, "description": "Existing transportation and storage infrastructure"},
+                "regulatory": {"weight": 0.14, "description": "Policy support and regulatory environment"},
+                "economic": {"weight": 0.12, "description": "Economic factors and development costs"},
+                "environmental": {"weight": 0.10, "description": "Environmental impact and sustainability"},
+                "technical": {"weight": 0.10, "description": "Technical feasibility and grid connectivity"}
+            }
         };
-        
+
         this.init();
     }
 
     async init() {
-        try {
-            // Wait for DOM to be fully loaded
-            if (document.readyState === 'loading') {
-                await new Promise(resolve => {
-                    document.addEventListener('DOMContentLoaded', resolve);
-                });
+        this.initializeMap();
+        this.setupDrawingTools();
+        this.loadInfrastructureData();
+        this.setupEventListeners();
+        this.setupThemeToggle();
+        this.initializeUI();
+        
+        console.log('Hydrogen Intelligence Platform initialized');
+    }
+
+    initializeMap() {
+        // Initialize map
+        this.map = L.map('map', {
+            center: [40.7128, -74.0060],
+            zoom: 3,
+            zoomControl: true
+        });
+
+        // Add tile layers
+        const baseLayers = {
+            'Satellite': L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors'
+            }),
+            'Terrain': L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors'
+            })
+        };
+
+        baseLayers['Satellite'].addTo(this.map);
+
+        // Initialize feature group for drawn items
+        this.drawnItems = new L.FeatureGroup();
+        this.map.addLayer(this.drawnItems);
+    }
+
+    setupDrawingTools() {
+        // Drawing options
+        const drawOptions = {
+            position: 'topright',
+            draw: {
+                polyline: false,
+                polygon: {
+                    allowIntersection: false,
+                    drawError: {
+                        color: '#e1e100',
+                        message: '<strong>Error:</strong> Shape edges cannot cross!'
+                    },
+                    shapeOptions: {
+                        color: '#32808D',
+                        weight: 3,
+                        opacity: 0.8,
+                        fillOpacity: 0.2
+                    }
+                },
+                circle: {
+                    shapeOptions: {
+                        color: '#32808D',
+                        weight: 3,
+                        opacity: 0.8,
+                        fillOpacity: 0.2
+                    }
+                },
+                rectangle: {
+                    shapeOptions: {
+                        color: '#32808D',
+                        weight: 3,
+                        opacity: 0.8,
+                        fillOpacity: 0.2
+                    }
+                },
+                marker: false,
+                circlemarker: false
+            },
+            edit: {
+                featureGroup: this.drawnItems,
+                remove: true
             }
+        };
+
+        this.drawControl = new L.Control.Draw(drawOptions);
+
+        // Map drawing events
+        this.map.on('draw:created', (e) => {
+            this.handleDrawCreated(e);
+        });
+
+        this.map.on('draw:deleted', (e) => {
+            this.handleDrawDeleted(e);
+        });
+    }
+
+    handleDrawCreated(e) {
+        const layer = e.layer;
+        
+        // Clear existing AOI
+        this.drawnItems.clearLayers();
+        this.drawnItems.addLayer(layer);
+        this.currentAOI = layer;
+
+        // Calculate AOI metrics
+        const metrics = this.calculateAOIMetrics(layer);
+        this.displayAOIInfo(metrics);
+
+        // Trigger analysis
+        this.runAnalysis();
+    }
+
+    handleDrawDeleted(e) {
+        this.currentAOI = null;
+        this.hideAOIInfo();
+        this.clearAnalysis();
+    }
+
+    calculateAOIMetrics(layer) {
+        let area = 0;
+        let perimeter = 0;
+        let center = null;
+
+        if (layer instanceof L.Polygon || layer instanceof L.Rectangle) {
+            const latlngs = layer.getLatLngs()[0];
+            area = L.GeometryUtil ? L.GeometryUtil.geodesicArea(latlngs) : 0;
+            center = layer.getBounds().getCenter();
             
-            this.setupEventListeners();
-            await this.initializeMap();
-            this.setupWeightControls();
-            this.showToast('Platform Ready - Draw an area to begin analysis', 'success');
-        } catch (error) {
-            console.error('Platform initialization failed:', error);
-            this.showToast('Platform initialization failed', 'error');
+            // Calculate perimeter
+            for (let i = 0; i < latlngs.length; i++) {
+                const next = (i + 1) % latlngs.length;
+                perimeter += latlngs[i].distanceTo(latlngs[next]);
+            }
+        } else if (layer instanceof L.Circle) {
+            const radius = layer.getRadius();
+            area = Math.PI * radius * radius;
+            perimeter = 2 * Math.PI * radius;
+            center = layer.getLatLng();
         }
+
+        return {
+            area: (area / 1000000).toFixed(2) + ' km²', // Convert to km²
+            perimeter: (perimeter / 1000).toFixed(2) + ' km', // Convert to km
+            center: center ? `${center.lat.toFixed(4)}, ${center.lng.toFixed(4)}` : '--'
+        };
+    }
+
+    displayAOIInfo(metrics) {
+        const aoiInfo = document.getElementById('aoiInfo');
+        document.getElementById('aoiArea').textContent = metrics.area;
+        document.getElementById('aoiPerimeter').textContent = metrics.perimeter;
+        document.getElementById('aoiCenter').textContent = metrics.center;
+        aoiInfo.style.display = 'block';
+    }
+
+    hideAOIInfo() {
+        document.getElementById('aoiInfo').style.display = 'none';
+    }
+
+    loadInfrastructureData() {
+        // Load production plants
+        this.data.hydrogen_infrastructure.plants.forEach(plant => {
+            const marker = this.createPlantMarker(plant);
+            this.markers.plants.addLayer(marker);
+        });
+
+        // Load storage facilities
+        this.data.hydrogen_infrastructure.storage_facilities.forEach(storage => {
+            const marker = this.createStorageMarker(storage);
+            this.markers.storage.addLayer(marker);
+        });
+
+        // Load demand centers
+        this.data.hydrogen_infrastructure.demand_centers.forEach(demand => {
+            const marker = this.createDemandMarker(demand);
+            this.markers.demand.addLayer(marker);
+        });
+
+        // Load renewable sources
+        this.data.hydrogen_infrastructure.renewable_sources.forEach(renewable => {
+            const marker = this.createRenewableMarker(renewable);
+            this.markers.renewable.addLayer(marker);
+        });
+
+        // Add all layers to map
+        Object.values(this.markers).forEach(layer => {
+            layer.addTo(this.map);
+        });
+    }
+
+    createPlantMarker(plant) {
+        const statusColors = {
+            'operational': '#32C55E',
+            'construction': '#F59E0B',
+            'planning': '#6B7280'
+        };
+
+        return L.circleMarker([plant.lat, plant.lng], {
+            radius: 8,
+            fillColor: statusColors[plant.status] || '#6B7280',
+            color: '#fff',
+            weight: 2,
+            opacity: 1,
+            fillOpacity: 0.8
+        }).bindPopup(`
+            <div class="marker-popup">
+                <h4>${plant.name}</h4>
+                <p><strong>Capacity:</strong> ${plant.capacity}</p>
+                <p><strong>Status:</strong> ${plant.status}</p>
+                <p><strong>Type:</strong> ${plant.type}</p>
+            </div>
+        `);
+    }
+
+    createStorageMarker(storage) {
+        return L.circleMarker([storage.lat, storage.lng], {
+            radius: 6,
+            fillColor: '#8B5CF6',
+            color: '#fff',
+            weight: 2,
+            opacity: 1,
+            fillOpacity: 0.8
+        }).bindPopup(`
+            <div class="marker-popup">
+                <h4>${storage.name}</h4>
+                <p><strong>Capacity:</strong> ${storage.capacity}</p>
+                <p><strong>Status:</strong> ${storage.status}</p>
+                <p><strong>Type:</strong> ${storage.type}</p>
+            </div>
+        `);
+    }
+
+    createDemandMarker(demand) {
+        return L.circleMarker([demand.lat, demand.lng], {
+            radius: Math.max(4, demand.demand / 10000),
+            fillColor: '#EF4444',
+            color: '#fff',
+            weight: 2,
+            opacity: 1,
+            fillOpacity: 0.6
+        }).bindPopup(`
+            <div class="marker-popup">
+                <h4>${demand.name}</h4>
+                <p><strong>Demand:</strong> ${demand.demand.toLocaleString()} tons/year</p>
+                <p><strong>Type:</strong> ${demand.type}</p>
+                <p><strong>Growth:</strong> ${(demand.growth * 100).toFixed(1)}%</p>
+            </div>
+        `);
+    }
+
+    createRenewableMarker(renewable) {
+        const typeColors = {
+            'solar': '#F59E0B',
+            'offshore_wind': '#06B6D4',
+            'onshore_wind': '#10B981'
+        };
+
+        return L.circleMarker([renewable.lat, renewable.lng], {
+            radius: Math.max(4, renewable.capacity / 100),
+            fillColor: typeColors[renewable.type] || '#6B7280',
+            color: '#fff',
+            weight: 2,
+            opacity: 1,
+            fillOpacity: 0.7
+        }).bindPopup(`
+            <div class="marker-popup">
+                <h4>${renewable.name}</h4>
+                <p><strong>Capacity:</strong> ${renewable.capacity} MW</p>
+                <p><strong>Type:</strong> ${renewable.type.replace('_', ' ')}</p>
+                <p><strong>Efficiency:</strong> ${(renewable.efficiency * 100).toFixed(1)}%</p>
+            </div>
+        `);
     }
 
     setupEventListeners() {
-        // Drawing tools
-        this.addEventListenerSafe('draw-polygon', 'click', () => this.activateDrawTool('polygon'));
-        this.addEventListenerSafe('draw-rectangle', 'click', () => this.activateDrawTool('rectangle'));
-        this.addEventListenerSafe('draw-circle', 'click', () => this.activateDrawTool('circle'));
-        this.addEventListenerSafe('clear-all', 'click', () => this.clearAllAreas());
+        // Drawing tool buttons
+        document.getElementById('drawPolygon').addEventListener('click', () => {
+            new L.Draw.Polygon(this.map, this.drawControl.options.draw.polygon).enable();
+            this.setActiveDrawingTool('drawPolygon');
+        });
 
-        // Map controls
-        this.addEventListenerSafe('reset-view', 'click', () => this.resetMapView());
-        this.addEventListenerSafe('satellite-toggle', 'click', () => this.toggleSatelliteView());
+        document.getElementById('drawRectangle').addEventListener('click', () => {
+            new L.Draw.Rectangle(this.map, this.drawControl.options.draw.rectangle).enable();
+            this.setActiveDrawingTool('drawRectangle');
+        });
 
-        // Panel controls
-        this.addEventListenerSafe('toggle-panel', 'click', () => this.togglePanel());
-        this.addEventListenerSafe('close-results', 'click', () => this.hideResults());
+        document.getElementById('drawCircle').addEventListener('click', () => {
+            new L.Draw.Circle(this.map, this.drawControl.options.draw.circle).enable();
+            this.setActiveDrawingTool('drawCircle');
+        });
 
-        // Analysis preset
-        this.addEventListenerSafe('analysis-preset', 'change', (e) => this.applyPreset(e.target.value));
-        
-        // Reset weights
-        this.addEventListenerSafe('reset-weights', 'click', () => this.resetWeights());
+        document.getElementById('clearAOI').addEventListener('click', () => {
+            this.drawnItems.clearLayers();
+            this.currentAOI = null;
+            this.hideAOIInfo();
+            this.clearAnalysis();
+        });
 
-        // Export functionality
-        this.addEventListenerSafe('export-report', 'click', () => this.exportReport());
-        
-        // Help button
-        this.addEventListenerSafe('help-btn', 'click', () => this.showHelp());
-    }
+        // Layer toggles
+        document.getElementById('plantLayer').addEventListener('change', (e) => {
+            this.toggleLayer('plants', e.target.checked);
+        });
 
-    addEventListenerSafe(id, event, handler) {
-        const element = document.getElementById(id);
-        if (element) {
-            element.addEventListener(event, handler);
-        } else {
-            console.warn(`Element with id '${id}' not found`);
-        }
-    }
+        document.getElementById('storageLayer').addEventListener('change', (e) => {
+            this.toggleLayer('storage', e.target.checked);
+        });
 
-    async initializeMap() {
-        if (this.isMapInitialized) return;
+        document.getElementById('demandLayer').addEventListener('change', (e) => {
+            this.toggleLayer('demand', e.target.checked);
+        });
 
-        try {
-            console.log('Initializing map...');
-            
-            // Wait for Leaflet to load
-            if (typeof L === 'undefined') {
-                await this.waitForLeaflet();
-            }
+        document.getElementById('renewableLayer').addEventListener('change', (e) => {
+            this.toggleLayer('renewable', e.target.checked);
+        });
 
-            // Initialize map with retry logic
-            let retries = 3;
-            while (retries > 0 && !this.map) {
-                try {
-                    this.map = L.map('map', {
-                        center: [20.5937, 78.9629], // Center of India
-                        zoom: 5,
-                        zoomControl: false,
-                        preferCanvas: true
-                    });
-                    break;
-                } catch (mapError) {
-                    console.warn('Map creation attempt failed:', mapError);
-                    retries--;
-                    if (retries > 0) {
-                        await this.delay(1000);
-                    }
-                }
-            }
-
-            if (!this.map) {
-                throw new Error('Failed to create map after multiple attempts');
-            }
-
-            // Add zoom control to top-right
-            L.control.zoom({ position: 'topright' }).addTo(this.map);
-
-            // Add base tile layer with error handling
-            this.currentTileLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '© OpenStreetMap contributors',
-                maxZoom: 18,
-                errorTileUrl: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjU2IiBoZWlnaHQ9IjI1NiIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMjU2IiBoZWlnaHQ9IjI1NiIgZmlsbD0iI2Y1ZjVmNSIvPjx0ZXh0IHg9IjEyOCIgeT0iMTI4IiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMTQiIGZpbGw9IiM5OTkiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIwLjNlbSI+TWFwIFRpbGUgTm90IEF2YWlsYWJsZTwvdGV4dD48L3N2Zz4='
-            });
-
-            this.currentTileLayer.addTo(this.map);
-
-            // Initialize satellite layer
-            this.satelliteLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-                attribution: '© Esri',
-                errorTileUrl: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjU2IiBoZWlnaHQ9IjI1NiIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMjU2IiBoZWlnaHQ9IjI1NiIgZmlsbD0iIzMzMzMzMyIvPjx0ZXh0IHg9IjEyOCIgeT0iMTI4IiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMTQiIGZpbGw9IiNjY2MiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIwLjNlbSI+U2F0ZWxsaXRlIFZpZXcgVW5hdmFpbGFibGU8L3RleHQ+PC9zdmc+'
-            });
-
-            // Initialize drawing
-            this.drawnItems = new L.FeatureGroup();
-            this.map.addLayer(this.drawnItems);
-            
-            await this.setupDrawControl();
-            this.setupMapEvents();
-            
-            this.isMapInitialized = true;
-            console.log('Map initialized successfully');
-            
-        } catch (error) {
-            console.error('Map initialization failed:', error);
-            this.showToast('Map initialization failed - please refresh the page', 'error');
-            throw error;
-        }
-    }
-
-    async waitForLeaflet() {
-        let attempts = 0;
-        while (typeof L === 'undefined' && attempts < 50) {
-            await this.delay(100);
-            attempts++;
-        }
-        if (typeof L === 'undefined') {
-            throw new Error('Leaflet library failed to load');
-        }
-    }
-
-    async setupDrawControl() {
-        try {
-            // Wait for Leaflet.draw to be available
-            if (typeof L.Control.Draw === 'undefined') {
-                await this.waitForLeafletDraw();
-            }
-
-            this.drawControl = new L.Control.Draw({
-                position: 'topleft',
-                draw: {
-                    polygon: {
-                        allowIntersection: false,
-                        showArea: true,
-                        drawError: {
-                            color: '#e1e100',
-                            message: '<strong>Cannot draw shape here</strong>'
-                        },
-                        shapeOptions: {
-                            color: '#2563eb',
-                            fillColor: '#2563eb',
-                            fillOpacity: 0.2,
-                            weight: 3
-                        }
-                    },
-                    rectangle: {
-                        showArea: true,
-                        shapeOptions: {
-                            color: '#10b981',
-                            fillColor: '#10b981',
-                            fillOpacity: 0.2,
-                            weight: 3
-                        }
-                    },
-                    circle: {
-                        showRadius: true,
-                        shapeOptions: {
-                            color: '#f59e0b',
-                            fillColor: '#f59e0b',
-                            fillOpacity: 0.2,
-                            weight: 3
-                        }
-                    },
-                    marker: false,
-                    circlemarker: false,
-                    polyline: false
-                },
-                edit: {
-                    featureGroup: this.drawnItems,
-                    remove: true
+        // Parameter sliders
+        const sliders = ['renewableWeight', 'demandWeight', 'infraWeight', 'economicWeight'];
+        sliders.forEach(sliderId => {
+            const slider = document.getElementById(sliderId);
+            slider.addEventListener('input', (e) => {
+                const valueSpan = e.target.parentNode.querySelector('.parameter-value');
+                valueSpan.textContent = e.target.value + '%';
+                
+                if (this.currentAOI) {
+                    this.runAnalysis();
                 }
             });
-
-            this.map.addControl(this.drawControl);
-            
-            // Hide the default toolbar immediately
-            setTimeout(() => {
-                const toolbars = document.querySelectorAll('.leaflet-draw-toolbar');
-                toolbars.forEach(toolbar => {
-                    toolbar.style.display = 'none';
-                });
-            }, 0);
-            
-        } catch (error) {
-            console.error('Draw control setup failed:', error);
-            this.showToast('Drawing tools setup failed', 'warning');
-        }
-    }
-
-    async waitForLeafletDraw() {
-        let attempts = 0;
-        while (typeof L.Control.Draw === 'undefined' && attempts < 50) {
-            await this.delay(100);
-            attempts++;
-        }
-        if (typeof L.Control.Draw === 'undefined') {
-            throw new Error('Leaflet.draw library failed to load');
-        }
-    }
-
-    setupMapEvents() {
-        if (!this.map) return;
-
-        this.map.on('draw:created', async (event) => {
-            try {
-                const layer = event.layer;
-                const type = event.layerType;
-                
-                // Add unique ID to layer
-                layer._aoiId = 'aoi_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
-                layer._aoiType = type;
-                
-                this.drawnItems.addLayer(layer);
-                
-                // Deactivate drawing tools
-                this.deactivateAllDrawTools();
-                
-                this.showToast(`${type.charAt(0).toUpperCase() + type.slice(1)} area created - Analyzing...`, 'success');
-                
-                // Analyze the area
-                await this.analyzeArea(layer);
-                
-            } catch (error) {
-                console.error('Error handling draw:created event:', error);
-                this.showToast('Error creating area', 'error');
-            }
         });
 
-        this.map.on('draw:edited', async () => {
-            this.showToast('Area updated - reanalyzing...', 'info');
-            // Re-analyze if there's a current analysis
-            if (this.currentAnalysis) {
-                await this.analyzeArea(this.currentAnalysis.layer);
-            }
-        });
-
-        this.map.on('draw:deleted', () => {
-            this.hideResults();
-            this.currentAnalysis = null;
-            this.showToast('Area deleted', 'info');
-        });
-
-        // Handle map load errors
-        this.map.on('tileerror', (e) => {
-            console.warn('Tile load error:', e);
-        });
-    }
-
-    setupWeightControls() {
-        const weights = ['land', 'renewable', 'infrastructure', 'water', 'regulatory'];
-        
-        weights.forEach(weight => {
-            const slider = document.getElementById(`weight-${weight}`);
-            if (slider) {
-                slider.addEventListener('input', (e) => {
-                    this.updateWeight(weight, parseInt(e.target.value));
-                });
-            }
-        });
-        
-        this.updateTotalWeight();
-    }
-
-    updateWeight(type, value) {
-        const mapping = {
-            land: 'landCost',
-            renewable: 'renewablePotential',
-            infrastructure: 'infrastructure',
-            water: 'waterAvailability',
-            regulatory: 'regulatory'
-        };
-        
-        this.weights[mapping[type]] = value;
-        
-        // Update display
-        const valueElement = document.getElementById(`weight-${type}-value`);
-        if (valueElement) {
-            valueElement.textContent = `${value}%`;
-        }
-        
-        this.updateTotalWeight();
-        
-        // Re-analyze if there's a current analysis
-        if (this.currentAnalysis) {
-            this.performAnalysisCalculations(this.currentAnalysis.layer)
-                .then(analysis => {
-                    this.currentAnalysis = analysis;
-                    this.showResults(analysis);
-                })
-                .catch(error => {
-                    console.error('Error re-analyzing:', error);
-                });
-        }
-    }
-
-    updateTotalWeight() {
-        const total = Object.values(this.weights).reduce((sum, weight) => sum + weight, 0);
-        const totalElement = document.getElementById('total-weight');
-        if (totalElement) {
-            totalElement.textContent = `${total}%`;
-            totalElement.style.color = total === 100 ? 'var(--color-success)' : 'var(--color-warning)';
-        }
-    }
-
-    resetWeights() {
-        this.weights = {
-            landCost: 25,
-            renewablePotential: 30,
-            infrastructure: 20,
-            waterAvailability: 15,
-            regulatory: 10
-        };
-        
-        // Update sliders
-        const updates = {
-            'weight-land': 25,
-            'weight-renewable': 30,
-            'weight-infrastructure': 20,
-            'weight-water': 15,
-            'weight-regulatory': 10
-        };
-        
-        Object.entries(updates).forEach(([id, value]) => {
-            const slider = document.getElementById(id);
-            const display = document.getElementById(`${id}-value`);
-            
-            if (slider) slider.value = value;
-            if (display) display.textContent = `${value}%`;
-        });
-        
-        this.updateTotalWeight();
-        this.showToast('Weights reset to default', 'info');
-    }
-
-    activateDrawTool(tool) {
-        if (!this.map || !this.drawControl) {
-            this.showToast('Drawing tools not ready yet', 'warning');
-            return;
-        }
-
-        try {
-            // Reset all tool buttons
-            document.querySelectorAll('.tool-btn').forEach(btn => {
-                btn.classList.remove('active');
-            });
-            
-            // Activate selected tool button
-            const toolBtn = document.getElementById(`draw-${tool}`);
-            if (toolBtn) {
-                toolBtn.classList.add('active');
-            }
-            
-            // Deactivate any currently active tools first
-            this.deactivateAllDrawTools();
-            
-            // Get the handler for the selected tool
-            const handlers = this.drawControl._toolbars.draw._modes;
-            const handler = handlers[tool]?.handler;
-            
-            if (handler) {
-                handler.enable();
-                this.activeDrawTool = tool;
-                this.showToast(`${tool} drawing tool activated - Click on the map to start drawing`, 'info');
+        // Action buttons
+        document.getElementById('runAnalysis').addEventListener('click', () => {
+            if (this.currentAOI) {
+                this.runAnalysis();
             } else {
-                throw new Error(`Handler for ${tool} not found`);
+                this.showNotification('Please draw an area of interest first.', 'warning');
             }
-            
-        } catch (error) {
-            console.error('Error activating draw tool:', error);
-            this.showToast('Error activating drawing tool', 'error');
+        });
+
+        document.getElementById('exportData').addEventListener('click', () => {
+            this.exportAnalysisData();
+        });
+
+        // Close AOI info
+        document.getElementById('closeAoiInfo').addEventListener('click', () => {
+            this.hideAOIInfo();
+        });
+
+        // Sidebar toggle
+        document.getElementById('sidebarToggle').addEventListener('click', () => {
+            this.toggleSidebar();
+        });
+    }
+
+    setActiveDrawingTool(toolId) {
+        // Remove active class from all tools
+        document.querySelectorAll('.tool-btn').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        
+        // Add active class to current tool
+        document.getElementById(toolId).classList.add('active');
+    }
+
+    toggleLayer(layerName, visible) {
+        if (visible) {
+            if (!this.map.hasLayer(this.markers[layerName])) {
+                this.map.addLayer(this.markers[layerName]);
+            }
+        } else {
+            this.map.removeLayer(this.markers[layerName]);
         }
     }
 
-    deactivateAllDrawTools() {
-        try {
-            if (!this.drawControl || !this.drawControl._toolbars) return;
-            
-            const handlers = this.drawControl._toolbars.draw._modes;
-            Object.values(handlers).forEach(mode => {
-                if (mode.handler && mode.handler.enabled && mode.handler.enabled()) {
-                    mode.handler.disable();
-                }
-            });
-            
-            // Reset tool buttons
-            document.querySelectorAll('.tool-btn').forEach(btn => {
-                btn.classList.remove('active');
-            });
-            
-            this.activeDrawTool = null;
-            
-        } catch (error) {
-            console.error('Error deactivating draw tools:', error);
-        }
-    }
+    async runAnalysis() {
+        if (!this.currentAOI || this.isAnalyzing) return;
 
-    async analyzeArea(layer) {
+        this.isAnalyzing = true;
+        this.showLoadingOverlay();
+        this.updateAnalysisStatus('analyzing', 'Analyzing...');
+
         try {
-            this.showLoading();
+            // Simulate AI analysis delay
+            await new Promise(resolve => setTimeout(resolve, 2000));
+
+            // Calculate analysis results
+            const results = this.calculateAnalysisResults();
             
-            // Simulate processing time
-            await this.delay(1500);
-            
-            const analysis = await this.performAnalysisCalculations(layer);
-            this.currentAnalysis = analysis;
-            
-            this.updateLayerStyle(layer, analysis);
-            this.showResults(analysis);
+            // Display results
+            this.displayAnalysisResults(results);
+            this.updateAnalysisStatus('complete', 'Analysis Complete');
             
         } catch (error) {
             console.error('Analysis failed:', error);
-            this.showToast('Analysis failed', 'error');
+            this.updateAnalysisStatus('error', 'Analysis Failed');
         } finally {
-            this.hideLoading();
+            this.isAnalyzing = false;
+            this.hideLoadingOverlay();
         }
     }
 
-    async performAnalysisCalculations(layer) {
-        const bounds = layer.getBounds();
-        const center = bounds.getCenter();
-        const area = this.calculateArea(layer);
-        const state = this.getStateFromCoordinates(center.lat, center.lng);
-        
-        // Calculate individual scores
+    calculateAnalysisResults() {
+        // Get analysis parameters
+        const params = {
+            renewable: parseInt(document.getElementById('renewableWeight').value) / 100,
+            demand: parseInt(document.getElementById('demandWeight').value) / 100,
+            infrastructure: parseInt(document.getElementById('infraWeight').value) / 100,
+            economic: parseInt(document.getElementById('economicWeight').value) / 100
+        };
+
+        // Simulate AI analysis with realistic results
         const scores = {
-            landCost: this.calculateLandCostScore(state, area),
-            renewablePotential: this.calculateRenewableScore(state, center),
-            infrastructure: this.calculateInfrastructureScore(center),
-            waterAvailability: this.calculateWaterScore(center),
-            regulatory: this.calculateRegulatoryScore(state)
+            overall: 0.75 + Math.random() * 0.2,
+            renewable: 0.70 + Math.random() * 0.25,
+            demand: 0.65 + Math.random() * 0.3,
+            infrastructure: 0.80 + Math.random() * 0.15,
+            economic: 0.60 + Math.random() * 0.35
         };
-        
+
         // Calculate weighted overall score
-        const overallScore = this.calculateWeightedScore(scores);
-        const suitability = this.getSuitabilityRating(overallScore);
-        
+        scores.overall = (
+            scores.renewable * params.renewable +
+            scores.demand * params.demand +
+            scores.infrastructure * params.infrastructure +
+            scores.economic * params.economic
+        );
+
         return {
-            layer: layer,
-            center: center,
-            area: area,
-            state: state,
-            scores: scores,
-            overallScore: overallScore,
-            suitability: suitability,
-            investment: this.calculateInvestmentEstimate(area),
-            roi: this.calculateROI(overallScore, area),
-            landCostRange: this.getLandCostRange(state),
-            timestamp: new Date()
+            scores,
+            recommendations: this.generateRecommendations(scores),
+            economics: this.calculateEconomics(),
+            risks: this.assessRisks(scores)
         };
     }
 
-    calculateLandCostScore(state, area) {
-        const stateData = this.analysisData.suitability_criteria.land_cost[state.toLowerCase()];
-        if (stateData) {
-            // Lower cost = higher score
-            const avgCost = stateData.avg;
-            const maxCost = 1000000; // Maximum expected cost
-            return Math.max(10, 100 - (avgCost / maxCost) * 100);
-        }
-        return 60; // Default score
-    }
-
-    calculateRenewableScore(state, center) {
-        const stateKey = state.toLowerCase();
-        const solarData = this.analysisData.suitability_criteria.renewable_potential.solar_irradiance[stateKey];
-        const windData = this.analysisData.suitability_criteria.renewable_potential.wind_potential[stateKey];
-        
-        let score = 50; // Base score
-        
-        if (solarData) {
-            score += (solarData.value / 6.0) * 30; // Solar contribution
-        }
-        
-        if (windData) {
-            score += (windData.value / 8.0) * 20; // Wind contribution
-        }
-        
-        // Coastal bonus for wind
-        if (this.isCoastalLocation(center)) {
-            score += 10;
-        }
-        
-        return Math.min(score, 100);
-    }
-
-    calculateInfrastructureScore(center) {
-        let score = 70; // Base infrastructure score
-        
-        if (this.isNearMajorCity(center)) {
-            score += 15;
-        }
-        
-        if (this.isInIndustrialCorridor(center)) {
-            score += 10;
-        }
-        
-        return Math.min(score, 100);
-    }
-
-    calculateWaterScore(center) {
-        let score = 65; // Base water score
-        
-        if (this.isCoastalLocation(center)) {
-            score += 15;
-        }
-        
-        if (this.isNearRiver(center)) {
-            score += 10;
-        }
-        
-        if (this.isDesertArea(center)) {
-            score -= 20;
-        }
-        
-        return Math.max(20, Math.min(score, 100));
-    }
-
-    calculateRegulatoryScore(state) {
-        const stateScores = {
-            gujarat: 90,
-            rajasthan: 85,
-            maharashtra: 80,
-            tamilnadu: 82,
-            karnataka: 78,
-            andhrapradesh: 75
-        };
-        
-        return stateScores[state.toLowerCase()] || 70;
-    }
-
-    calculateWeightedScore(scores) {
-        let weightedSum = 0;
-        let totalWeight = 0;
-        
-        Object.entries(scores).forEach(([criterion, score]) => {
-            const weight = this.weights[criterion] || 0;
-            weightedSum += score * (weight / 100);
-            totalWeight += weight;
-        });
-        
-        return totalWeight > 0 ? Math.round((weightedSum / totalWeight) * 100) : 0;
-    }
-
-    getSuitabilityRating(score) {
-        if (score >= 80) return { rating: 'Excellent', class: 'excellent' };
-        if (score >= 65) return { rating: 'Good', class: 'good' };
-        if (score >= 45) return { rating: 'Moderate', class: 'moderate' };
-        return { rating: 'Poor', class: 'poor' };
-    }
-
-    calculateInvestmentEstimate(area) {
-        return Math.round(area * 500);
-    }
-
-    calculateROI(score, area) {
-        const baseROI = 15;
-        const scoreBonus = (score - 50) / 10;
-        return Math.max(6, Math.round(baseROI - scoreBonus));
-    }
-
-    getLandCostRange(state) {
-        const stateData = this.analysisData.suitability_criteria.land_cost[state.toLowerCase()];
-        if (stateData) {
-            return `${(stateData.min / 100000).toFixed(1)}-${(stateData.max / 100000).toFixed(1)} L/ha`;
-        }
-        return '3-8 L/ha';
-    }
-
-    calculateArea(layer) {
-        if (layer instanceof L.Circle) {
-            const radius = layer.getRadius(); // in meters
-            return Math.PI * Math.pow(radius / 1000, 2); // Convert to km²
-        } else if (layer instanceof L.Polygon || layer instanceof L.Rectangle) {
-            // Simplified area calculation
-            const bounds = layer.getBounds();
-            const sw = bounds.getSouthWest();
-            const ne = bounds.getNorthEast();
-            const width = this.getDistanceFromLatLonInKm(sw.lat, sw.lng, sw.lat, ne.lng);
-            const height = this.getDistanceFromLatLonInKm(sw.lat, sw.lng, ne.lat, sw.lng);
-            return width * height * 0.7; // Approximate for polygon shape
-        }
-        return 10; // Default area
-    }
-
-    getDistanceFromLatLonInKm(lat1, lon1, lat2, lon2) {
-        const R = 6371; // Radius of the earth in km
-        const dLat = this.deg2rad(lat2 - lat1);
-        const dLon = this.deg2rad(lon2 - lon1);
-        const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-            Math.cos(this.deg2rad(lat1)) * Math.cos(this.deg2rad(lat2)) *
-            Math.sin(dLon / 2) * Math.sin(dLon / 2);
-        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-        return R * c;
-    }
-
-    deg2rad(deg) {
-        return deg * (Math.PI / 180);
-    }
-
-    getStateFromCoordinates(lat, lng) {
-        if (lng >= 68.5 && lng <= 74.5 && lat >= 20.0 && lat <= 26.0) return 'Gujarat';
-        if (lng >= 69.0 && lng <= 78.0 && lat >= 24.0 && lat <= 30.5) return 'Rajasthan';
-        if (lng >= 72.0 && lng <= 80.0 && lat >= 15.5 && lat <= 22.0) return 'Maharashtra';
-        if (lng >= 76.0 && lng <= 84.0 && lat >= 8.0 && lat <= 15.0) return 'TamilNadu';
-        if (lng >= 74.0 && lng <= 78.0 && lat >= 11.5 && lat <= 19.0) return 'Karnataka';
-        if (lng >= 77.0 && lng <= 84.5 && lat >= 12.5 && lat <= 19.5) return 'AndhraPradesh';
-        return 'Gujarat'; // Default state
-    }
-
-    isCoastalLocation(center) {
-        return (center.lng < 75 && center.lat < 23) || 
-               (center.lng > 79 && center.lat < 20) || 
-               (center.lat < 12);
-    }
-
-    isNearMajorCity(center) {
-        const cities = [
-            { lat: 19.0760, lng: 72.8777 }, // Mumbai
-            { lat: 28.7041, lng: 77.1025 }, // Delhi  
-            { lat: 12.9716, lng: 77.5946 }, // Bangalore
-            { lat: 13.0827, lng: 80.2707 }, // Chennai
-            { lat: 22.5726, lng: 88.3639 }, // Kolkata
-            { lat: 23.0225, lng: 72.5714 }  // Ahmedabad
-        ];
-        
-        return cities.some(city => {
-            const distance = this.getDistanceFromLatLonInKm(center.lat, center.lng, city.lat, city.lng);
-            return distance < 100;
-        });
-    }
-
-    isInIndustrialCorridor(center) {
-        return (center.lat >= 19 && center.lat <= 29 && center.lng >= 72 && center.lng <= 77);
-    }
-
-    isNearRiver(center) {
-        return (center.lng >= 75 && center.lng <= 83 && center.lat >= 22 && center.lat <= 27) || 
-               (center.lng >= 73 && center.lng <= 81 && center.lat >= 16 && center.lat <= 23);
-    }
-
-    isDesertArea(center) {
-        return (center.lng >= 69 && center.lng <= 75 && center.lat >= 24 && center.lat <= 30);
-    }
-
-    updateLayerStyle(layer, analysis) {
-        const colors = {
-            excellent: '#059669',
-            good: '#10b981', 
-            moderate: '#f59e0b',
-            poor: '#ef4444'
-        };
-        
-        const color = colors[analysis.suitability.class];
-        layer.setStyle({
-            color: color,
-            fillColor: color,
-            fillOpacity: 0.3,
-            weight: 3
-        });
-        
-        // Add popup
-        layer.bindPopup(this.createPopupContent(analysis), {
-            maxWidth: 280,
-            className: 'suitability-popup'
-        });
-    }
-
-    createPopupContent(analysis) {
-        return `
-            <div class="suitability-popup">
-                <div class="popup-title">Analysis Results</div>
-                <div class="popup-score">
-                    <div class="popup-score-value">${analysis.overallScore}</div>
-                    <div class="popup-score-label">${analysis.suitability.rating}</div>
-                </div>
-                <div class="popup-details">
-                    <strong>Area:</strong> ${analysis.area.toFixed(1)} km²<br>
-                    <strong>State:</strong> ${analysis.state}<br>
-                    <strong>Investment:</strong> ₹${analysis.investment} Cr<br>
-                    <strong>ROI Timeline:</strong> ${analysis.roi} years
-                </div>
-                <div class="popup-action">
-                    <button class="popup-btn" onclick="window.hydrogenPlatform.showDetailedResults()">
-                        View Details
-                    </button>
-                </div>
-            </div>
-        `;
-    }
-
-    showResults(analysis) {
-        const resultsPanel = document.getElementById('results-panel');
-        if (!resultsPanel) return;
-        
-        // Update overall score
-        const overallScoreEl = document.getElementById('overall-score');
-        const ratingElement = document.getElementById('score-rating');
-        
-        if (overallScoreEl) overallScoreEl.textContent = analysis.overallScore;
-        if (ratingElement) {
-            ratingElement.textContent = analysis.suitability.rating;
-            ratingElement.className = `score-rating ${analysis.suitability.class}`;
-        }
-        
-        // Update location details
-        this.updateElement('area-size', `${analysis.area.toFixed(1)} km²`);
-        this.updateElement('primary-state', analysis.state);
-        this.updateElement('investment-estimate', `₹${analysis.investment} Cr`);
-        this.updateElement('roi-timeline', `${analysis.roi} years`);
-        this.updateElement('land-cost-range', analysis.landCostRange);
-        this.updateElement('renewable-score', `${Math.round(analysis.scores.renewablePotential)}/100`);
-        
-        // Update chart
-        this.updateAnalysisChart(analysis.scores);
-        
-        // Update recommendations
-        this.updateRecommendations(analysis);
-        
-        // Show panel
-        resultsPanel.classList.remove('hidden');
-    }
-
-    updateElement(id, value) {
-        const element = document.getElementById(id);
-        if (element) {
-            element.textContent = value;
-        }
-    }
-
-    updateAnalysisChart(scores) {
-        const canvas = document.querySelector('#criteria-chart canvas');
-        if (!canvas) return;
-        
-        const ctx = canvas.getContext('2d');
-        
-        // Destroy existing chart
-        if (this.analysisChart) {
-            this.analysisChart.destroy();
-        }
-        
-        // Wait for Chart.js to be available
-        if (typeof Chart === 'undefined') {
-            console.warn('Chart.js not loaded yet');
-            return;
-        }
-        
-        this.analysisChart = new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: ['Land Cost', 'Renewable', 'Infrastructure', 'Water', 'Regulatory'],
-                datasets: [{
-                    label: 'Score',
-                    data: [
-                        Math.round(scores.landCost),
-                        Math.round(scores.renewablePotential),
-                        Math.round(scores.infrastructure),
-                        Math.round(scores.waterAvailability),
-                        Math.round(scores.regulatory)
-                    ],
-                    backgroundColor: ['#1FB8CD', '#FFC185', '#B4413C', '#ECEBD5', '#5D878F'],
-                    borderRadius: 4,
-                    borderSkipped: false
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { display: false }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        max: 100,
-                        ticks: { callback: (value) => value + '%' }
-                    },
-                    x: {
-                        ticks: { maxRotation: 0 }
-                    }
-                }
-            }
-        });
-    }
-
-    updateRecommendations(analysis) {
-        const container = document.getElementById('recommendations-list');
-        if (!container) return;
-        
-        const recommendations = this.generateRecommendations(analysis);
-        
-        container.innerHTML = recommendations.map(rec => `
-            <div class="recommendation-item ${rec.priority}">
-                <div class="recommendation-title">${rec.title}</div>
-                <div class="recommendation-desc">${rec.description}</div>
-            </div>
-        `).join('');
-    }
-
-    generateRecommendations(analysis) {
+    generateRecommendations(scores) {
         const recommendations = [];
-        const score = analysis.overallScore;
         
-        if (score >= 80) {
-            recommendations.push({
-                title: 'Excellent Development Potential',
-                description: 'This location shows exceptional suitability for hydrogen infrastructure. Consider fast-track development with priority funding.',
-                priority: 'high'
-            });
-        } else if (score >= 65) {
-            recommendations.push({
-                title: 'Good Development Candidate',
-                description: 'Strong potential for hydrogen infrastructure development. Recommended for detailed feasibility study.',
-                priority: 'medium'
-            });
-        } else {
-            recommendations.push({
-                title: 'Consider Alternative Locations',
-                description: 'Current suitability is limited. Evaluate nearby areas or wait for infrastructure improvements.',
-                priority: 'low'
-            });
+        if (scores.renewable > 0.8) {
+            recommendations.push('Excellent renewable energy potential in this area');
         }
-        
-        const scores = analysis.scores;
-        if (scores.renewablePotential < 60) {
-            recommendations.push({
-                title: 'Enhance Renewable Integration',
-                description: 'Consider hybrid solar-wind systems or grid electricity with renewable certificates to improve viability.',
-                priority: 'medium'
-            });
+        if (scores.demand > 0.7) {
+            recommendations.push('Strong hydrogen demand within reasonable distance');
         }
-        
-        if (scores.infrastructure < 60) {
-            recommendations.push({
-                title: 'Infrastructure Development Required',
-                description: 'Coordinate with local authorities for grid connectivity and transportation infrastructure improvements.',
-                priority: 'high'
-            });
+        if (scores.infrastructure < 0.6) {
+            recommendations.push('Infrastructure development required for optimal operations');
+        }
+        if (scores.economic > 0.7) {
+            recommendations.push('Favorable economic conditions for hydrogen development');
         }
         
         return recommendations;
     }
 
-    showDetailedResults() {
-        if (this.currentAnalysis) {
-            this.showResults(this.currentAnalysis);
-        }
-    }
-
-    hideResults() {
-        const resultsPanel = document.getElementById('results-panel');
-        if (resultsPanel) {
-            resultsPanel.classList.add('hidden');
-        }
-    }
-
-    togglePanel() {
-        const panel = document.getElementById('control-panel');
-        const toggleBtn = document.getElementById('toggle-panel');
-        
-        if (panel && toggleBtn) {
-            panel.classList.toggle('collapsed');
-            const icon = toggleBtn.querySelector('.toggle-icon');
-            if (icon) {
-                icon.textContent = panel.classList.contains('collapsed') ? '›' : '‹';
-            }
-        }
-    }
-
-    clearAllAreas() {
-        if (this.drawnItems) {
-            this.drawnItems.clearLayers();
-            this.hideResults();
-            this.currentAnalysis = null;
-            this.deactivateAllDrawTools();
-            this.showToast('All areas cleared', 'info');
-        }
-    }
-
-    resetMapView() {
-        if (this.map) {
-            this.map.setView([20.5937, 78.9629], 5);
-            this.showToast('Map view reset', 'info');
-        }
-    }
-
-    toggleSatelliteView() {
-        if (!this.satelliteLayer || !this.map) return;
-        
-        if (this.map.hasLayer(this.satelliteLayer)) {
-            this.map.removeLayer(this.satelliteLayer);
-            this.map.addLayer(this.currentTileLayer);
-            this.showToast('Switched to map view', 'info');
-        } else {
-            this.map.removeLayer(this.currentTileLayer);
-            this.map.addLayer(this.satelliteLayer);
-            this.showToast('Switched to satellite view', 'info');
-        }
-    }
-
-    applyPreset(preset) {
-        const presets = {
-            'cost-optimized': { landCost: 40, renewablePotential: 25, infrastructure: 15, waterAvailability: 10, regulatory: 10 },
-            'renewable-focused': { landCost: 15, renewablePotential: 45, infrastructure: 20, waterAvailability: 10, regulatory: 10 },
-            'infrastructure-focused': { landCost: 20, renewablePotential: 20, infrastructure: 35, waterAvailability: 15, regulatory: 10 }
+    calculateEconomics() {
+        return {
+            capex: (200 + Math.random() * 150) * 1000000, // $200-350M
+            opex: (15 + Math.random() * 10) * 1000000, // $15-25M annually
+            roi: 12 + Math.random() * 8, // 12-20%
+            payback: 6 + Math.random() * 4 // 6-10 years
         };
-        
-        if (presets[preset]) {
-            this.weights = presets[preset];
-            
-            Object.entries(this.weights).forEach(([key, value]) => {
-                const mapping = {
-                    landCost: 'land',
-                    renewablePotential: 'renewable',
-                    infrastructure: 'infrastructure',
-                    waterAvailability: 'water',
-                    regulatory: 'regulatory'
-                };
-                
-                const sliderKey = mapping[key];
-                const slider = document.getElementById(`weight-${sliderKey}`);
-                const display = document.getElementById(`weight-${sliderKey}-value`);
-                
-                if (slider) slider.value = value;
-                if (display) display.textContent = `${value}%`;
-            });
-            
-            this.updateTotalWeight();
-            this.showToast(`Applied ${preset.replace('-', ' ')} preset`, 'success');
-        }
     }
 
-    exportReport() {
-        if (!this.currentAnalysis) {
-            this.showToast('No analysis data to export', 'warning');
+    assessRisks(scores) {
+        return [
+            { factor: 'Technical Risk', level: scores.infrastructure > 0.7 ? 'Low' : 'Medium' },
+            { factor: 'Market Risk', level: scores.demand > 0.7 ? 'Low' : 'High' },
+            { factor: 'Regulatory Risk', level: 'Medium' },
+            { factor: 'Environmental Risk', level: scores.renewable > 0.8 ? 'Low' : 'Medium' }
+        ];
+    }
+
+    displayAnalysisResults(results) {
+        const content = document.getElementById('analysisPanelContent');
+        
+        content.innerHTML = `
+            <div class="analysis-results">
+                <div class="analysis-section">
+                    <h4>Overall Assessment</h4>
+                    <div class="score-display">
+                        <div class="score-circle" style="background: conic-gradient(var(--color-primary) ${results.scores.overall * 360}deg, var(--color-secondary) 0deg)">
+                            ${Math.round(results.scores.overall * 100)}
+                        </div>
+                        <div class="score-details">
+                            <p class="score-title">Site Suitability Score</p>
+                            <h3 class="score-value">${Math.round(results.scores.overall * 100)}%</h3>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="analysis-section">
+                    <h4>Detailed Scores</h4>
+                    <div class="chart-container" style="position: relative; height: 250px;">
+                        <canvas id="scoresChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="analysis-section">
+                    <h4>Economic Analysis</h4>
+                    <div class="economic-metrics">
+                        <div class="metric-row">
+                            <span>CAPEX:</span>
+                            <span>$${(results.economics.capex / 1000000).toFixed(0)}M</span>
+                        </div>
+                        <div class="metric-row">
+                            <span>Annual OPEX:</span>
+                            <span>$${(results.economics.opex / 1000000).toFixed(0)}M</span>
+                        </div>
+                        <div class="metric-row">
+                            <span>Expected ROI:</span>
+                            <span>${results.economics.roi.toFixed(1)}%</span>
+                        </div>
+                        <div class="metric-row">
+                            <span>Payback Period:</span>
+                            <span>${results.economics.payback.toFixed(1)} years</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="analysis-section">
+                    <h4>Risk Assessment</h4>
+                    <div class="risk-list">
+                        ${results.risks.map(risk => `
+                            <div class="risk-item">
+                                <span>${risk.factor}</span>
+                                <span class="risk-level risk-${risk.level.toLowerCase()}">${risk.level}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+
+                <div class="analysis-section">
+                    <h4>Key Recommendations</h4>
+                    <ul class="recommendations-list">
+                        ${results.recommendations.map(rec => `<li>${rec}</li>`).join('')}
+                    </ul>
+                </div>
+            </div>
+        `;
+
+        // Create scores chart
+        this.createScoresChart(results.scores);
+        
+        // Add custom styles
+        const style = document.createElement('style');
+        style.textContent = `
+            .metric-row {
+                display: flex;
+                justify-content: space-between;
+                margin-bottom: var(--space-8);
+                font-size: var(--font-size-sm);
+            }
+            .risk-item {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: var(--space-8);
+                font-size: var(--font-size-sm);
+            }
+            .risk-level {
+                padding: var(--space-4) var(--space-8);
+                border-radius: var(--radius-sm);
+                font-weight: var(--font-weight-medium);
+                font-size: var(--font-size-xs);
+            }
+            .risk-low { background: var(--color-bg-3); color: var(--color-success); }
+            .risk-medium { background: var(--color-bg-2); color: var(--color-warning); }
+            .risk-high { background: var(--color-bg-4); color: var(--color-error); }
+            .recommendations-list {
+                margin: 0;
+                padding-left: var(--space-20);
+            }
+            .recommendations-list li {
+                margin-bottom: var(--space-8);
+                font-size: var(--font-size-sm);
+                line-height: 1.4;
+            }
+        `;
+        document.head.appendChild(style);
+    }
+
+    createScoresChart(scores) {
+        const ctx = document.getElementById('scoresChart');
+        if (this.analysisCharts.scores) {
+            this.analysisCharts.scores.destroy();
+        }
+
+        this.analysisCharts.scores = new Chart(ctx, {
+            type: 'radar',
+            data: {
+                labels: ['Renewable Access', 'Demand Proximity', 'Infrastructure', 'Economic Factors'],
+                datasets: [{
+                    label: 'Site Score',
+                    data: [
+                        Math.round(scores.renewable * 100),
+                        Math.round(scores.demand * 100),
+                        Math.round(scores.infrastructure * 100),
+                        Math.round(scores.economic * 100)
+                    ],
+                    borderColor: '#32808D',
+                    backgroundColor: 'rgba(50, 128, 141, 0.2)',
+                    borderWidth: 2,
+                    pointBackgroundColor: '#32808D',
+                    pointBorderColor: '#ffffff',
+                    pointBorderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    r: {
+                        beginAtZero: true,
+                        max: 100,
+                        ticks: {
+                            stepSize: 20
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                }
+            }
+        });
+    }
+
+    clearAnalysis() {
+        const content = document.getElementById('analysisPanelContent');
+        content.innerHTML = `
+            <div class="analysis-placeholder">
+                <div class="placeholder-icon">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+                        <polyline points="22,12 18,12 15,21 9,3 6,12 2,12"></polyline>
+                    </svg>
+                </div>
+                <h4>Draw an AOI to begin analysis</h4>
+                <p>Use the drawing tools to select an area of interest for hydrogen infrastructure analysis.</p>
+            </div>
+        `;
+        this.updateAnalysisStatus('ready', 'Ready');
+    }
+
+    updateAnalysisStatus(status, text) {
+        const indicator = document.getElementById('analysisStatus');
+        const statusText = document.getElementById('analysisStatusText');
+        
+        indicator.className = `status-indicator ${status}`;
+        statusText.textContent = text;
+    }
+
+    showLoadingOverlay() {
+        document.getElementById('loadingOverlay').classList.add('active');
+    }
+
+    hideLoadingOverlay() {
+        document.getElementById('loadingOverlay').classList.remove('active');
+    }
+
+    exportAnalysisData() {
+        if (!this.currentAOI) {
+            this.showNotification('No analysis data to export', 'warning');
             return;
         }
-        
-        const reportData = {
+
+        const data = {
             timestamp: new Date().toISOString(),
-            analysis: {
-                location: {
-                    center: this.currentAnalysis.center,
-                    area: this.currentAnalysis.area,
-                    state: this.currentAnalysis.state
-                },
-                scores: this.currentAnalysis.scores,
-                overallScore: this.currentAnalysis.overallScore,
-                suitability: this.currentAnalysis.suitability,
-                investment: this.currentAnalysis.investment,
-                roi: this.currentAnalysis.roi
-            },
-            weights: this.weights
+            aoi: this.currentAOI.toGeoJSON(),
+            analysis: 'Analysis results would be included here',
+            platform_version: this.data.platform_metadata.version
         };
-        
-        const blob = new Blob([JSON.stringify(reportData, null, 2)], { type: 'application/json' });
+
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
         a.download = `hydrogen-analysis-${Date.now()}.json`;
-        document.body.appendChild(a);
         a.click();
-        document.body.removeChild(a);
         URL.revokeObjectURL(url);
+    }
+
+    setupThemeToggle() {
+        const themeToggle = document.getElementById('themeToggle');
+        themeToggle.addEventListener('click', () => {
+            const currentTheme = document.documentElement.getAttribute('data-color-scheme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-color-scheme', newTheme);
+        });
+    }
+
+    toggleSidebar() {
+        const sidebar = document.getElementById('sidebar');
+        const mainApp = document.querySelector('.main-app');
         
-        this.showToast('Analysis report exported successfully', 'success');
+        sidebar.classList.toggle('collapsed');
+        mainApp.classList.toggle('sidebar-collapsed');
     }
 
-    showHelp() {
-        this.showToast('Help: Draw areas on the map using the tools in the left panel to get detailed suitability analysis', 'info');
-    }
+    showNotification(message, type = 'info') {
+        // Simple notification system
+        const notification = document.createElement('div');
+        notification.className = `notification notification-${type}`;
+        notification.textContent = message;
+        notification.style.cssText = `
+            position: fixed;
+            top: 90px;
+            right: 20px;
+            background: var(--color-surface);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-base);
+            padding: var(--space-12) var(--space-16);
+            box-shadow: var(--shadow-lg);
+            z-index: 10000;
+            animation: slideIn 0.3s ease-out;
+        `;
 
-    showLoading() {
-        const overlay = document.getElementById('loading-overlay');
-        if (overlay) {
-            overlay.classList.remove('hidden');
-        }
-    }
+        document.body.appendChild(notification);
 
-    hideLoading() {
-        const overlay = document.getElementById('loading-overlay');
-        if (overlay) {
-            overlay.classList.add('hidden');
-        }
-    }
-
-    showToast(message, type = 'info') {
-        const container = document.getElementById('toast-container');
-        if (!container) return;
-
-        const toast = document.createElement('div');
-        toast.className = `toast ${type}`;
-        toast.textContent = message;
-        
-        container.appendChild(toast);
-        
         setTimeout(() => {
-            toast.style.opacity = '0';
-            toast.style.transform = 'translateX(100%)';
-            setTimeout(() => {
-                if (container.contains(toast)) {
-                    container.removeChild(toast);
-                }
-            }, 300);
-        }, 4000);
+            notification.remove();
+        }, 3000);
     }
 
-    delay(ms) {
-        return new Promise(resolve => setTimeout(resolve, ms));
+    initializeUI() {
+        // Set initial analysis status
+        this.updateAnalysisStatus('ready', 'Ready');
+        
+        // Initialize parameter values
+        document.querySelectorAll('.parameter-slider').forEach(slider => {
+            const valueSpan = slider.parentNode.querySelector('.parameter-value');
+            valueSpan.textContent = slider.value + '%';
+        });
+
+        console.log('UI initialized successfully');
     }
 }
 
-// Initialize the platform when DOM is ready
+// Initialize the platform when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
-    window.hydrogenPlatform = new HydrogenAnalysisPlatform();
+    window.hydrogenPlatform = new HydrogenIntelligencePlatform();
 });
+
+// Add CSS animation for notifications
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes slideIn {
+        from {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+        to {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    }
+`;
+document.head.appendChild(style);
